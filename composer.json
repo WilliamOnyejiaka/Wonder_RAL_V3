@@ -1,0 +1,21 @@
+{
+    "name": "user/wonder_ral_v3",
+    "description": "A php rest api library",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Lib\\": "lib/"
+        }
+    },
+    "authors": [
+        {
+            "name": "WilliamOnyejiaka",
+            "email": "williamonyejiaka08062528003@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "firebase/php-jwt": "dev-main",
+        "vlucas/phpdotenv": "5.5.x-dev"
+    }
+}
