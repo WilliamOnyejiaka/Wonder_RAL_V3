@@ -1,5 +1,5 @@
 {
-    "name": "WilliamOnyejiaka/wonder_ral_v3",
+    "name": "william-onyejiaka/wonder_ral_v3",
     "description": "A php rest api library",
     "type": "library",
     "autoload": {
