@@ -57,7 +57,7 @@ class Controller
 
       if ($jwt) {
         $payload = Controller::get_payload($jwt);
-        if ($payload->aud == "users") {
+        if ($payload->aud !== "access_token") {
           $callback($payload, $body,$this->response);
         } else {
           $this->response->send_response(400, [
