@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Lib;
 
 ini_set('display_errors', 1);
+use Lib\Controller;
 
 class Router
 {
@@ -17,44 +18,47 @@ class Router
   private $callback_405;
   private string $uri_path_start;
   private $allow_cors;
+  private $token_configs;
 
-  public function __construct($uri_path_start, $allow_cors)
+  public function __construct($uri_path_start, $allow_cors, $token_configs = null)
   {
     $this->allow_cors = $allow_cors;
     $this->uri_path_start = $uri_path_start;
+    $this->token_configs = $token_configs;
   }
 
-  public function get(string $path, $callback): void
+  public function get(string $path, $callback, $type = "public"): void
   {
-    $this->add_handler(self::METHOD_GET, $path, $callback);
+    $this->add_handler(self::METHOD_GET, $path, $callback, $type);
   }
 
-  public function post(string $path, $callback): void
+  public function post(string $path, $callback, $type = "public"): void
   {
-    $this->add_handler(self::METHOD_POST, $path, $callback);
+    $this->add_handler(self::METHOD_POST, $path, $callback, $type);
   }
 
-  public function put(string $path, $callback): void
+  public function put(string $path, $callback, $type = "public"): void
   {
-    $this->add_handler(self::METHOD_PUT, $path, $callback);
+    $this->add_handler(self::METHOD_PUT, $path, $callback, $type);
   }
 
-  public function patch(string $path, $callback): void
+  public function patch(string $path, $callback, $type = "public"): void
   {
-    $this->add_handler(self::METHOD_PATCH, $path, $callback);
+    $this->add_handler(self::METHOD_PATCH, $path, $callback, $type);
   }
 
-  public function delete(string $path, $callback): void
+  public function delete(string $path, $callback, $type = "public"): void
   {
-    $this->add_handler(self::METHOD_DELETE, $path, $callback);
+    $this->add_handler(self::METHOD_DELETE, $path, $callback, $type);
   }
 
-  private function add_handler(string $method, string $path, $callback): void
+  private function add_handler(string $method, string $path, $callback, $type): void
   {
     $this->handlers[$method . $path] = [
       'path' => $path,
       'method' => $method,
       'callback' => $callback,
+      'type' => $type
     ];
   }
 
@@ -110,7 +114,7 @@ class Router
     $this->callback_404 = $callback;
   }
 
-  private function invoke_callback($callback)
+  private function invoke_callback($callback, $type)
   {
     ($this->allow_cors && $this->activate_cors());
     header('Content-Type: application/json');
@@ -135,7 +139,26 @@ class Router
         $callback = [$class, $method];
       }
     }
-    call_user_func_array($callback, [array_merge($_GET, $_POST)]);
+
+    $controller = new Controller($this->token_configs);
+    if ($type == "public") {
+      $controller->public_controller($callback);
+    }elseif ($type == "protected") {
+      $controller->protected_controller($callback);
+    }elseif($type == "token"){
+      $controller->access_token_controller($callback);
+    }else {
+      $controller->public_controller(function ($body, $response) {
+        $response->send_response(500, [
+          'error' => true,
+          'message' => "invalid type,only protected or public needed"
+        ]);
+      });
+    }
+
+
+
+
   }
 
   public function run(): void
@@ -161,7 +184,6 @@ class Router
       }
     }
 
-    $this->invoke_callback($callback);
+    $this->invoke_callback($callback, $handler['type']);
   }
 }
-?>
