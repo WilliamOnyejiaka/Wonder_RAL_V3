@@ -13,7 +13,7 @@
             "email": "williamonyejiaka08062528003@gmail.com"
         }
     ],
-    "minimum-stability": "dev-main",
+    "minimum-stability": "stable",
     "require": {
         "firebase/php-jwt": "dev-main"
     }
