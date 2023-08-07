@@ -125,7 +125,11 @@ class Router
         $callback = $this->callback_404;
       } else {
         $callback = function () {
-          echo "Not Found";
+          http_response_code(404);
+          echo json_encode([
+            'error' => true,
+            'message' => "the requested url cannot be found"
+          ]);
         };
       }
     }
@@ -143,22 +147,18 @@ class Router
     $controller = new Controller($this->token_configs);
     if ($type == "public") {
       $controller->public_controller($callback);
-    }elseif ($type == "protected") {
+    } elseif ($type == "protected") {
       $controller->protected_controller($callback);
-    }elseif($type == "token"){
+    } elseif ($type == "token") {
       $controller->access_token_controller($callback);
-    }else {
-      $controller->public_controller(function ($body, $response) {
+    } else {
+      $controller->public_controller(function ($request, $response) {
         $response->send_response(500, [
           'error' => true,
           'message' => "invalid type,only protected or public needed"
         ]);
       });
     }
-
-
-
-
   }
 
   public function run(): void
@@ -178,7 +178,11 @@ class Router
           $callback = $this->callback_405;
         } else {
           $callback = function () {
-            echo "Method Not Allowed";
+            http_response_code(405);
+            echo json_encode([
+              'error' => true,
+              'message' => "method not allowed"
+            ]);
           };
         }
       }

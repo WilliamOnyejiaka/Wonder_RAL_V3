@@ -9,6 +9,7 @@ use \Firebase\JWT\JWT;
 use \Firebase\JWT\Key;
 use Lib\Response;
 use Lib\Validator;
+use Lib\Request;
 
 ini_set("display_errors", 1);
 
@@ -17,12 +18,14 @@ class Controller
 
   private Response $response;
   private Validator $validator;
+  private Request $request;
   private $token_configs;
 
   public function __construct($token_configs = null)
   {
     $this->response = new Response();
     $this->validator = new Validator();
+    $this->request = new Request();
     $this->token_configs = $token_configs;
   }
 
@@ -63,7 +66,6 @@ class Controller
     header('Content-Type: application/json');
 
     $token = (getallheaders())['Authorization'] ?? false;
-    $body = json_decode(file_get_contents("php://input"));
 
     if ($token) {
 
@@ -72,7 +74,8 @@ class Controller
       if ($jwt) {
         $payload = $this->get_payload($jwt);
         if ($payload->aud !== "access_token") {
-          $callback($payload, $body, $this->response);
+          $this->request->payload = $payload;
+          $callback($this->request, $this->response);
         } else {
           $this->response->send_response(400, [
             'error' => true,
@@ -96,9 +99,7 @@ class Controller
   public function public_controller($callback): void
   {
     header('Content-Type: application/json');
-
-    $body = json_decode(file_get_contents("php://input"));
-    $callback($body, $this->response);
+    $callback($this->request, $this->response);
   }
 
   public function access_token_controller($callback)
@@ -115,7 +116,8 @@ class Controller
       if ($jwt) {
         $payload = $this->get_payload($jwt);
         if ($payload->aud == "access_token") {
-          $callback($payload, $body, $this->response);
+          $this->request->payload = $payload;
+          $callback($this->request, $this->response);
         } else {
           $this->response->send_response(400, [
             'error' => true,

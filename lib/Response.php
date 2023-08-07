@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Lib;
 
+ini_set('display_errors', 1);
 class Response
 {
   private $response_data;
