@@ -92,20 +92,16 @@ class Router
     }
 
     if (!$start_index) {
-      echo "Not";
+      http_response_code(404);
+      echo json_encode([
+        'error' => true,
+        'message' => "starting path not found"
+      ]);
       exit();
     }
     for ($i = $start_index; $i < count($paths); $i++) {
       $requestPath = $requestPath . "/" . $paths[$i];
     }
-
-
-    // $request_uri = parse_url($_SERVER['REQUEST_URI']);
-    // $paths =  explode("/",$request_uri['path']);
-    // $requestPath = "";
-    // for($i = 6;$i < count($paths);$i++){
-    //    $requestPath = $requestPath ."/" . $paths[$i];
-    // }
     return $requestPath;
   }
 
