@@ -54,6 +54,13 @@ class Response
     }
     return $response_array;
   }
+
+  public function send_error_response(int $error_code,$message){
+    $this->send_response($error_code,[
+      'error' => true,
+      'message' => $message
+    ]);
+  }
 }
 
 ?>

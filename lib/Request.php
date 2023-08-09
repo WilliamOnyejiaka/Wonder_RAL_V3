@@ -35,5 +35,13 @@ class Request
         }
     }
 
+    public function file($key)
+    {
+        if (isset($_FILES[$key])) {
+            return $_FILES[$key];
+        }
+        return null;
+    }
+
 
 }
