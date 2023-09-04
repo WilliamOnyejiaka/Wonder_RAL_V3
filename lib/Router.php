@@ -4,11 +4,15 @@ namespace Lib;
 
 ini_set('display_errors', 1);
 use Lib\Controller;
+use Lib\Response;
+use Lib\Request;
 
 class Router
 {
 
   private array $handlers;
+
+  private array $middlewares;
   private const METHOD_GET = "GET";
   private const METHOD_POST = "POST";
   private const METHOD_PUT = "PUT";
@@ -27,38 +31,50 @@ class Router
     $this->token_configs = $token_configs;
   }
 
-  public function get(string $path, $callback, $type = "public"): void
+  public function get(string $path, $callback, $type = "public",string $name = null): void
   {
-    $this->add_handler(self::METHOD_GET, $path, $callback, $type);
+    $this->add_handler(self::METHOD_GET, $path, $callback, $type,$name);
   }
 
-  public function post(string $path, $callback, $type = "public"): void
+  public function post(string $path, $callback, $type = "public", string $name=null): void
   {
-    $this->add_handler(self::METHOD_POST, $path, $callback, $type);
+    $this->add_handler(self::METHOD_POST, $path, $callback, $type, $name);
   }
 
-  public function put(string $path, $callback, $type = "public"): void
+  public function put(string $path, $callback, $type = "public", string $name = null): void
   {
-    $this->add_handler(self::METHOD_PUT, $path, $callback, $type);
+    $this->add_handler(self::METHOD_PUT, $path, $callback, $type, $name);
   }
 
-  public function patch(string $path, $callback, $type = "public"): void
+  public function patch(string $path, $callback, $type = "public", string $name = null): void
   {
-    $this->add_handler(self::METHOD_PATCH, $path, $callback, $type);
+    $this->add_handler(self::METHOD_PATCH, $path, $callback, $type, $name);
   }
 
-  public function delete(string $path, $callback, $type = "public"): void
+  public function delete(string $path, $callback, $type = "public", string $name = null): void
   {
-    $this->add_handler(self::METHOD_DELETE, $path, $callback, $type);
+    $this->add_handler(self::METHOD_DELETE, $path, $callback, $type, $name);
   }
 
-  private function add_handler(string $method, string $path, $callback, $type): void
+  private function add_handler(string $method, string $path, $callback, $type,$name): void
   {
     $this->handlers[$method . $path] = [
       'path' => $path,
       'method' => $method,
       'callback' => $callback,
-      'type' => $type
+      'type' => $type,
+      'name' => $name
+    ];
+  }
+
+  public function middleware($middleware,array $routes) : void {
+    $this->add_middleware($middleware,$routes);
+  }
+
+  private function add_middleware($middleware,array $routes): void{
+    $this->middlewares[time().""] = [
+      'routes' => $routes,
+      'middleware' => $middleware
     ];
   }
 
@@ -67,6 +83,8 @@ class Router
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
     header("Access-Control-Allow-Credentials: true");
+    header('Content-Type: application/json');
+
 
     $method = $_SERVER['REQUEST_METHOD'];
     if ($method == "OPTIONS") {
@@ -114,11 +132,22 @@ class Router
     $this->callback_404 = $callback;
   }
 
+  private function invoke_middleware($callback){
+    if (is_array($callback)) {
+      $classname = $callback[0];
+      $class = new $classname;
+
+      $method = $callback[1];
+      $callback = [$class, $method];
+    }
+    
+    $response = new Response();
+    $request = new Request();
+    call_user_func_array($callback,[$request,$response]);
+  }
+
   private function invoke_callback($callback, $type)
   {
-    ($this->allow_cors && $this->activate_cors());
-    header('Content-Type: application/json');
-
     if (!$callback) {
       header("HTTP/1.0 404 Not Found");
       if (!empty($this->callback_404)) {
@@ -184,6 +213,15 @@ class Router
               'message' => "method not allowed"
             ]);
           };
+        }
+      }
+    }
+
+    ($this->allow_cors && $this->activate_cors());
+    if(isset($this->middlewares)){
+      foreach ($this->middlewares as $middleware) {
+        if (in_array($handler['name'],$middleware['routes'])) {
+          $this->invoke_middleware($middleware['middleware']);
         }
       }
     }
