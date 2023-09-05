@@ -5,15 +5,24 @@ namespace Lib;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-use \Firebase\JWT\JWT;
-use \Firebase\JWT\Key;
-use Lib\Response;
-use Lib\Validator;
-use Lib\Request;
+use Lib\BaseRouter;
 
 ini_set("display_errors", 1);
 
-class Blueprint
+class Blueprint extends BaseRouter
 {
 
+    public function __construct(string $url_prefix)
+    {
+        parent::__construct();
+        $this->url_prefix = $url_prefix;
+    }
+
+    public function __get($property)
+    {
+        if (property_exists($this, $property)) {
+            return $this->$property;
+        }
+        return null;
+    }
 }

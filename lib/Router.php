@@ -3,21 +3,16 @@ declare(strict_types=1);
 namespace Lib;
 
 ini_set('display_errors', 1);
+
 use Lib\Controller;
 use Lib\Response;
 use Lib\Request;
+use Lib\Blueprint;
+use Lib\BaseRouter;
 
-class Router
+class Router extends BaseRouter
 {
 
-  private array $handlers;
-
-  private array $middlewares;
-  private const METHOD_GET = "GET";
-  private const METHOD_POST = "POST";
-  private const METHOD_PUT = "PUT";
-  private const METHOD_PATCH = "PATCH";
-  private const METHOD_DELETE = "DELETE";
   private $callback_404;
   private $callback_405;
   private string $uri_path_start;
@@ -26,78 +21,22 @@ class Router
 
   public function __construct($uri_path_start, $allow_cors, $token_configs = null)
   {
+    parent::__construct();
     $this->allow_cors = $allow_cors;
     $this->uri_path_start = $uri_path_start;
     $this->token_configs = $token_configs;
   }
 
-  public function get(string $path, $callback, $type = "public", string $name = null): Router
+  public function group(Blueprint $blueprint): void
   {
-    $this->add_handler(self::METHOD_GET, $path, $callback, $type, $name);
-    return $this;
-  }
 
-  public function post(string $path, $callback, $type = "public", string $name = null): Router
-  {
-    $this->add_handler(self::METHOD_POST, $path, $callback, $type, $name);
-    return $this;
-  }
-
-  public function put(string $path, $callback, $type = "public", string $name = null): Router
-  {
-    $this->add_handler(self::METHOD_PUT, $path, $callback, $type, $name);
-    return $this;
-  }
-
-  public function patch(string $path, $callback, $type = "public", string $name = null): Router
-  {
-    $this->add_handler(self::METHOD_PATCH, $path, $callback, $type, $name);
-    return $this;
-  }
-
-  public function delete(string $path, $callback, $type = "public", string $name = null): Router
-  {
-    $this->add_handler(self::METHOD_DELETE, $path, $callback, $type, $name);
-    return $this;
-  }
-
-  public function route(string|array $methods, string $path, $callback, $type = "public", string $name = null): Router
-  {
-    $this->add_handler($methods, $path, $callback, $type, $name);
-    return $this;
-  }
-
-  private function add_handler(string|array $method, string $path, $callback, $type, $name): void
-  {
-    $index = null;
-    if (is_array($method)) {
-      $index = implode(",", $method);
+    foreach ($blueprint->handlers as $index => $handler) {
+      $this->handlers[$index] = $handler;
     }
-    $this->handlers[$index . $path] = [
-      'path' => $path,
-      'method' => $method,
-      'callback' => $callback,
-      'type' => $type,
-      'name' => $name
-    ];
-  }
 
-  public function middleware($middleware, array|string $routes): Router
-  {
-    $this->add_middleware($middleware, $routes);
-    return $this;
-  }
-
-  private function add_middleware($middleware, array|string $routes): void
-  {
-    $index = null;
-    if (is_array($routes)) {
-      $index = implode(",", $routes);
+    foreach ($blueprint->middlewares as $index => $middleware) {
+      $this->middlewares[$index] = $middleware;
     }
-    $this->middlewares[rand(1, 20) . $index] = [
-      'routes' => $routes,
-      'middleware' => $middleware
-    ];
   }
 
   private function activate_cors()
