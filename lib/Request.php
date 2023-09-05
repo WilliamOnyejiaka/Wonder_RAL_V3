@@ -29,10 +29,8 @@ class Request
     {
         if (isset($_GET[$key]) && !empty($_GET[$key])) {
             return $_GET[$key];
-        } else {
-            $_GET[$key] = $default;
-            return $_GET[$key];
         }
+        return null;
     }
 
     public function file($key)
@@ -43,5 +41,14 @@ class Request
         return null;
     }
 
-
+    public function authorization(string $name)
+    {
+        if ($name == "email") {
+            return $_SERVER['PHP_AUTH_USER'] ?? null;
+        } elseif ($name == "password") {
+            return $_SERVER['PHP_AUTH_PW'] ?? null;
+        } else {
+            return null;
+        }
+    }
 }
