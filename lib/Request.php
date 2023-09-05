@@ -30,7 +30,7 @@ class Request
         if (isset($_GET[$key]) && !empty($_GET[$key])) {
             return $_GET[$key];
         }
-        return null;
+        return $default;
     }
 
     public function file($key)
@@ -50,5 +50,16 @@ class Request
         } else {
             return null;
         }
+    }
+
+    public function redirect($url)
+    {
+        header("Location: $url");
+        exit();
+    }
+
+    public function set_header($header_name, $value)
+    {
+        header("$header_name: $value");
     }
 }

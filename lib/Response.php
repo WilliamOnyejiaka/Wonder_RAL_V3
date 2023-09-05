@@ -55,12 +55,16 @@ class Response
     return $response_array;
   }
 
-  public function send_error_response(int $error_code,$message){
-    $this->send_response($error_code,[
+  public function send_error_response(int $error_code, $message)
+  {
+    $this->send_response($error_code, [
       'error' => true,
       'message' => $message
     ]);
   }
-}
 
-?>
+  public function get_header($key)
+  {
+    return (getallheaders())[$key] ?? null;
+  }
+}
