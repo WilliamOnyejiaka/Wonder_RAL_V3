@@ -62,4 +62,17 @@ class Request
     {
         header("$header_name: $value");
     }
+
+    public function locals($key, $value = null)
+    {
+        if (!isset($_SERVER['locals'])) {
+            $_SERVER['locals'] = [];
+        }
+
+        if (!isset($value)) {
+            return $_SERVER['locals'][$key] ?? null;
+        } else {
+            $_SERVER['locals'][$key] = $value;
+        }
+    }
 }

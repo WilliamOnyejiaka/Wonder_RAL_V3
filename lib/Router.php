@@ -27,7 +27,7 @@ class Router extends BaseRouter
     $this->token_configs = $token_configs;
   }
 
-  public function group(Blueprint $blueprint): void
+  public function group(Blueprint $blueprint): Router
   {
 
     foreach ($blueprint->handlers as $index => $handler) {
@@ -37,6 +37,7 @@ class Router extends BaseRouter
     foreach ($blueprint->middlewares as $index => $middleware) {
       $this->middlewares[$index] = $middleware;
     }
+    return $this;
   }
 
   private function activate_cors()
